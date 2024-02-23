@@ -1,0 +1,136 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+struct Node {
+    int coefficient;
+    int exponent;
+    struct Node* next;
+};
+struct Node* createNode(int coeff, int exp)
+{
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->coefficient = coeff;
+    newNode->exponent = exp;
+    newNode->next = NULL;
+    return newNode;
+}
+void display(struct Node* poly)
+{
+    struct Node* temp = poly;
+    if (temp == NULL) {
+        printf("Polynomial is empty.\n");
+        return;
+    }
+// Count the number of terms
+    int count = 0;
+    do {
+        count++;
+        temp = temp->next;
+    } while (temp != poly);
+// Create an array to store the terms in reverse order
+    struct Node* terms[count];
+    temp = poly;
+    for (int i = count - 1; i >= 0; i--) {
+        terms[i] = temp;
+        temp = temp->next;
+    }
+    for (int i = 0; i < count; i++) {
+        printf("%dx^%d", terms[i]->coefficient, terms[i]->exponent);
+        if (i < count - 1) {
+            printf(" + ");
+        }
+    }
+    printf("\n");
+}
+struct Node* addPolynomials(struct Node* poly1, struct Node* poly2)
+{
+    struct Node *result = NULL, *temp1 = poly1, *temp2 = poly2;
+    do {
+        struct Node* term = createNode(0, 0);
+        if (temp1->exponent == temp2->exponent) {
+            term->coefficient = temp1->coefficient + temp2->coefficient;
+            term->exponent = temp1->exponent;
+            temp1 = temp1->next;
+            temp2 = temp2->next;
+        } else if (temp1->exponent > temp2->exponent) {
+            term->coefficient = temp1->coefficient;
+            term->exponent = temp1->exponent;
+            temp1 = temp1->next;
+        } else {
+            term->coefficient = temp2->coefficient;
+            term->exponent = temp2->exponent;
+            temp2 = temp2->next;
+        }
+        if (result == NULL) {
+            result = term;
+            result->next = result;
+        } else {
+            term->next = result->next;
+            result->next = term;
+            result = term;
+        }
+    } while (temp1 != poly1 || temp2 != poly2);
+    return result;
+}
+struct Node* createPolynomial()
+{
+    struct Node* poly = NULL;
+    int coeff, exp;
+    char choice;
+    do {
+        printf("Enter the coefficient: ");
+        scanf("%d", &coeff);
+        printf("Enter the exponent: ");
+        scanf("%d", &exp);
+        struct Node* term = createNode(coeff, exp);
+        if (poly == NULL) {
+            poly = term;
+            poly->next = poly;
+        } else {
+            term->next = poly->next;
+            poly->next = term;
+            poly = term;
+        }
+        printf("Do you want to add another term? (y/n): ");
+        scanf(" %c", &choice);
+    } while (choice == 'y' || choice == 'Y');
+    return poly;
+}
+int evaluatePolynomial(struct Node* poly, int x)
+{
+    int result = 0;
+    struct Node* temp = poly;
+    if (temp == NULL) {
+        return 0; // Empty polynomial
+    }
+    do {
+        result += temp->coefficient * pow(x, temp->exponent);
+        temp = temp->next;
+    } while (temp != poly);
+    return result;
+}
+int main()
+{
+// Create polynomials
+    printf("Enter coefficients and exponents for Polynomial 1:\n");
+    struct Node* poly1 = createPolynomial();
+    printf("Enter coefficients and exponents for Polynomial 2:\n");
+    struct Node* poly2 = createPolynomial();
+// Display polynomials
+    printf("\nPolynomial 1: ");
+    display(poly1);
+    printf("Polynomial 2: ");
+    display(poly2);
+// Add polynomials
+    struct Node* result = addPolynomials(poly1, poly2);
+// Display the result
+    printf("\nSum of Polynomials: ");
+    display(result);
+// Evaluate polynomial for a given value of x
+    int x;
+    printf("\nEnter the value of x for polynomial evaluation: ");
+    scanf("%d", &x);
+    int evaluationResult = evaluatePolynomial(result, x);
+    printf("Result of Polynomial Evaluation at x=%d: %d\n", x, evaluationResult);
+    return 0;
+}
